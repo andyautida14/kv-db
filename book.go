@@ -13,12 +13,18 @@ type BookBuffer struct {
 	buf [(4 * 32) + 4]byte
 }
 
+func Reset() {
+
+}
+
 func (b *BookBuffer) Title() string {
 	return string(b.buf[:(4*32)-1])
 }
 
 func (b *BookBuffer) SetTitle(v string) {
-	copy(b.buf[:(4*32)-1], []byte(v))
+	title_b := b.buf[:(4*32)-1]
+	clear(title_b)
+	copy(title_b, []byte(v+"\000"))
 }
 
 func (b *BookBuffer) PageCount() uint32 {
