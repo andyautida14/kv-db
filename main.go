@@ -25,6 +25,18 @@ func writeBooks(books []Book) error {
 	return nil
 }
 
+func updateBook(book *Book, off int) error {
+	f, err := os.OpenFile("./data/data", os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	bookBuf := NewBookBufferFromBook(book)
+	_, err = bookBuf.ToWriterAt(f, off)
+	return err
+}
+
 func readBooks() (*[]Book, error) {
 	f, err := os.OpenFile("./data/data", os.O_CREATE|os.O_RDONLY, 0644)
 	if err != nil {
@@ -76,6 +88,11 @@ func main() {
 	}
 
 	if err := writeBooks(booksToWrite); err != nil {
+		log.Fatal(err)
+	}
+
+	booksToWrite[1].Title = "Harry Potter and the Order of the Phoenix"
+	if err := updateBook(&booksToWrite[1], 1); err != nil {
 		log.Fatal(err)
 	}
 
