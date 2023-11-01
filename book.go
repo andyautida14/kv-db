@@ -13,8 +13,8 @@ type BookBuffer struct {
 	buf [(4 * 32) + 4]byte
 }
 
-func Reset() {
-
+func (b *BookBuffer) Reset() {
+	clear(b.buf[:])
 }
 
 func (b *BookBuffer) Title() string {
