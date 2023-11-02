@@ -13,11 +13,14 @@ func writeBooks(books []Book) error {
 	}
 	defer f.Close()
 
+	bookRw := NewBookReadWriter(f, 0)
+
 	bookBuf := BookBuffer{}
 
 	for i := 0; i < len(books); i++ {
 		bookBuf.SetFromBook(&books[i])
-		if _, err := bookBuf.ToWriterAt(f, i); err != nil {
+		bookRw.SetOffset(int64(i))
+		if _, err := bookBuf.WriteTo(bookRw); err != nil {
 			return err
 		}
 	}
@@ -25,36 +28,53 @@ func writeBooks(books []Book) error {
 	return nil
 }
 
-func updateBook(book *Book, off int) error {
-	f, err := os.OpenFile("./data/data", os.O_CREATE|os.O_WRONLY, 0644)
+func updateBook(off int, title string, pageCount uint32) error {
+	f, err := os.OpenFile("./data/data", os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	bookBuf := NewBookBufferFromBook(book)
-	_, err = bookBuf.ToWriterAt(f, off)
-	return err
+	bookRw := NewBookReadWriter(f, int64(off))
+
+	oldTitle, err := bookRw.Title()
+	if err != nil {
+		return err
+	}
+	fmt.Println("title before update:", oldTitle)
+
+	oldPageCount, err := bookRw.PageCount()
+	if err != nil {
+		return err
+	}
+	fmt.Println("page count before update:", oldPageCount)
+
+	if err := bookRw.SetTitle(title); err != nil {
+		return err
+	}
+
+	return bookRw.SetPageCount(pageCount)
 }
 
 func readBooks() (*[]Book, error) {
-	f, err := os.OpenFile("./data/data", os.O_CREATE|os.O_RDONLY, 0644)
+	f, err := os.OpenFile("./data/data", os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	stat, err := f.Stat()
+	bookRw := NewBookReadWriter(f, 0)
+	booksCount, err := bookRw.Count()
 	if err != nil {
 		return nil, err
 	}
-	booksCount := TotalBookCount(stat)
 
 	bookBuf := BookBuffer{}
 
 	books := []Book{}
 	for i := 0; i < int(booksCount); i++ {
-		if _, err := bookBuf.FromReaderAt(f, i); err != nil {
+		bookRw.SetOffset(int64(i))
+		if _, err := bookBuf.ReadFrom(bookRw); err != nil {
 			return nil, err
 		}
 		books = append(books, *bookBuf.ToBook())
@@ -71,19 +91,19 @@ func main() {
 	booksToWrite := []Book{
 		{
 			Title:     "Game of Thrones",
-			PageCount: 1012,
+			PageCount: 1024,
 		},
 		{
 			Title:     "Harry Potter",
-			PageCount: 1012,
+			PageCount: 1024,
 		},
 		{
 			Title:     "The Lord of the Rings",
-			PageCount: 1012,
+			PageCount: 1024,
 		},
 		{
 			Title:     "The Little Prince",
-			PageCount: 1012,
+			PageCount: 1024,
 		},
 	}
 
@@ -91,8 +111,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	booksToWrite[1].Title = "Harry Potter and the Order of the Phoenix"
-	if err := updateBook(&booksToWrite[1], 1); err != nil {
+	newTitle := "Harry Potter and the Order of the Phoenix"
+	if err := updateBook(1, newTitle, 2048); err != nil {
 		log.Fatal(err)
 	}
 
