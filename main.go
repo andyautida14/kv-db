@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 func writeBooks(books []Book) error {
@@ -83,7 +86,81 @@ func readBooks() (*[]Book, error) {
 	return &books, nil
 }
 
-func main() {
+func writeIndices(indices []BookIndex) error {
+	f, err := os.OpenFile("./data/index", os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if err := f.Truncate(0); err != nil {
+		return err
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		return err
+	}
+
+	indexTable := NewBookIndexReadWriter(f)
+
+	for _, item := range indices {
+		fmt.Print("inserting index:", item)
+		// if err := LinearInsert(&item, indexTable); err != nil {
+		// 	return err
+		// }
+		if err := Insert(&item, indexTable); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func readIndexTable() error {
+	f, err := os.OpenFile("./data/index", os.O_CREATE|os.O_RDONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	indexTable := NewBookIndexReadWriter(f)
+	count, err := indexTable.Count()
+	if err != nil {
+		return err
+	}
+
+	for i := int64(0); i < count; i++ {
+		index, err := indexTable.GetIndexByOffset(i)
+		if err != nil {
+			return err
+		}
+		fmt.Println("written item:", index, "offset:", i)
+	}
+
+	return nil
+}
+
+func readIndices(indices []BookIndex) error {
+	f, err := os.OpenFile("./data/index", os.O_CREATE|os.O_RDONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	indexTable := NewBookIndexReadWriter(f)
+
+	for _, index := range indices {
+		fmt.Print("finding index:", index, " ")
+		_, err := BinarySearch(index.Id, indexTable)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func mainOld() {
 	if err := os.MkdirAll("./data", os.ModePerm); err != nil {
 		log.Fatal(err)
 	}
@@ -124,4 +201,45 @@ func main() {
 	for i := 0; i < len(*books); i++ {
 		fmt.Println((*books)[i])
 	}
+}
+
+func main() {
+	var indices []BookIndex
+	for i := 0; i < 20; i++ {
+		indices = append(indices, BookIndex{
+			Id:     uuid.New(),
+			Offset: 0,
+		})
+	}
+
+	if err := writeIndices(indices); err != nil {
+		if err, ok := err.(stackTracer); ok {
+			for _, f := range err.StackTrace() {
+				fmt.Printf("%+s:%d\n", f, f)
+			}
+		}
+		log.Fatal(err)
+	}
+
+	if err := readIndexTable(); err != nil {
+		if err, ok := err.(stackTracer); ok {
+			for _, f := range err.StackTrace() {
+				fmt.Printf("%+s:%d\n", f, f)
+			}
+		}
+		log.Fatal(err)
+	}
+
+	if err := readIndices(indices); err != nil {
+		if err, ok := err.(stackTracer); ok {
+			for _, f := range err.StackTrace() {
+				fmt.Printf("%+s:%d\n", f, f)
+			}
+		}
+		log.Fatal(err)
+	}
+}
+
+type stackTracer interface {
+	StackTrace() errors.StackTrace
 }
