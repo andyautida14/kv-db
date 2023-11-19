@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding"
 	"encoding/binary"
 
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ const KeyOffsetSize = 8
 const KeySize = KeyIdSize + KeyOffsetSize
 
 type Key struct {
-	Id     uuid.UUID
+	Id     encoding.BinaryMarshaler
 	Offset uint64
 }
 
