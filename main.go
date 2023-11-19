@@ -31,7 +31,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	keyIndexer := NewKeyIndexer(keyStorage)
+	keyIndexer, err := NewIndexer(keyStorage, uint16(KeyIdSize))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	books := []Book{
 		{
@@ -121,6 +124,6 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Println("read key:", key)
+		fmt.Println("scan key:", key)
 	}
 }
