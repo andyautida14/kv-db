@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding"
 	"encoding/binary"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -19,12 +18,8 @@ type Key struct {
 	Offset uint64
 }
 
-type KeyStorage struct {
-	f *os.File
-}
-
 type KeyIndexer struct {
-	s *KeyStorage
+	s *Storage
 }
 
 func (k *Key) MarshalBinary() ([]byte, error) {
@@ -52,52 +47,6 @@ func (k *Key) UnmarshalBinary(b []byte) error {
 
 	k.Id = id
 	k.Offset = binary.LittleEndian.Uint64(b[KeyIdSize:])
-	return nil
-}
-
-func (s *KeyStorage) ReadOffset(b []byte, off int64) (int, error) {
-	if len(b) > KeySize {
-		return 0, errors.New("slice length exceeded key size")
-	}
-
-	n, err := s.f.ReadAt(b, off*KeySize)
-	if err != nil {
-		return 0, errors.Wrap(err, "read from key storage by offset failed")
-	}
-
-	return n, nil
-}
-
-func (s *KeyStorage) WriteOffset(b []byte, off int64) (int, error) {
-	if len(b) > KeySize {
-		return 0, errors.New("slice length exceeded key size")
-	}
-
-	n, err := s.f.WriteAt(b, off*KeySize)
-	if err != nil {
-		return 0, errors.Wrap(err, "write to key storage by offset failed")
-	}
-
-	return n, nil
-}
-
-func (s *KeyStorage) Count() (int64, error) {
-	stat, err := s.f.Stat()
-	if err != nil {
-		return -1, errors.Wrap(err, "counting key storage size failed")
-	}
-	return stat.Size() / KeySize, nil
-}
-
-func (s *KeyStorage) Reset() error {
-	if err := s.f.Truncate(0); err != nil {
-		return err
-	}
-
-	if _, err := s.f.Seek(0, 0); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -211,15 +160,6 @@ func (s *KeyIndexer) Find(key encoding.BinaryMarshaler) (*Key, error) {
 	return foundKey, nil
 }
 
-func NewKeyStorage(fileName string) (*KeyStorage, error) {
-	f, err := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
-	if err != nil {
-		return nil, err
-	}
-
-	return &KeyStorage{f: f}, nil
-}
-
-func NewKeyIndexer(s *KeyStorage) *KeyIndexer {
+func NewKeyIndexer(s *Storage) *KeyIndexer {
 	return &KeyIndexer{s: s}
 }

@@ -13,7 +13,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	bookStorage, err := NewBookStorage("./data/book/data")
+	bookStorage, err := NewStorage("./data/book/data", uint16(BookSize))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	keyStorage, err := NewKeyStorage("./data/book/keys")
+	keyStorage, err := NewStorage("./data/book/keys", uint16(KeySize))
 	if err != nil {
 		log.Fatal(err)
 	}
