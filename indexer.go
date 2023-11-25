@@ -12,7 +12,7 @@ type Indexer struct {
 	KeySize uint16
 }
 
-func (idx *Indexer) searchOffset(k []byte) (int64, bool, error) {
+func (idx *Indexer) binarySearch(k []byte) (int64, bool, error) {
 	count, err := idx.s.Count()
 	if err != nil {
 		return -1, false, err
@@ -43,41 +43,19 @@ func (idx *Indexer) searchOffset(k []byte) (int64, bool, error) {
 	return low, false, nil
 }
 
-func (idx *Indexer) shiftRight(targetOffset int64) error {
-	currentOffset, err := idx.s.Count()
-	if err != nil {
-		return err
-	}
-
-	b := make([]byte, idx.s.ItemSize)
-	for currentOffset > targetOffset {
-		if _, err := idx.s.ReadOffset(b, currentOffset-1); err != nil {
-			return err
-		}
-
-		if _, err := idx.s.WriteOffset(b, currentOffset); err != nil {
-			return err
-		}
-
-		currentOffset -= 1
-	}
-
-	return nil
-}
-
 func (idx *Indexer) Insert(item encoding.BinaryMarshaler) (int64, error) {
 	b, err := item.MarshalBinary()
 	if err != nil {
 		return -1, err
 	}
 
-	off, found, err := idx.searchOffset(b[:idx.KeySize])
+	off, found, err := idx.binarySearch(b[:idx.KeySize])
 	if err != nil {
 		return -1, err
 	}
 
 	if !found {
-		if err := idx.shiftRight(off); err != nil {
+		if err := idx.s.ShiftRight(off); err != nil {
 			return -1, err
 		}
 	}
@@ -99,7 +77,7 @@ func (idx *Indexer) Find(keyId encoding.BinaryMarshaler) (int64, error) {
 		return -1, errors.New("invalid key id size")
 	}
 
-	off, found, err := idx.searchOffset(b)
+	off, found, err := idx.binarySearch(b)
 	if err != nil {
 		return -1, err
 	}

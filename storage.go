@@ -37,6 +37,28 @@ func (s *Storage) WriteOffset(b []byte, off int64) (int, error) {
 	return n, nil
 }
 
+func (s *Storage) ShiftRight(targetOffset int64) error {
+	currentOffset, err := s.Count()
+	if err != nil {
+		return err
+	}
+
+	b := make([]byte, s.ItemSize)
+	for currentOffset > targetOffset {
+		if _, err := s.ReadOffset(b, currentOffset-1); err != nil {
+			return err
+		}
+
+		if _, err := s.WriteOffset(b, currentOffset); err != nil {
+			return err
+		}
+
+		currentOffset -= 1
+	}
+
+	return nil
+}
+
 func (s *Storage) Count() (int64, error) {
 	stat, err := s.f.Stat()
 	if err != nil {
