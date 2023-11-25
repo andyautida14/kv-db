@@ -7,12 +7,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Indexer struct {
-	s       *Storage
-	KeySize uint16
+type indexer struct {
+	s       Storage
+	keySize uint16
 }
 
-func (idx *Indexer) binarySearch(k []byte) (int64, bool, error) {
+func (idx *indexer) binarySearch(k []byte) (int64, bool, error) {
 	count, err := idx.s.Count()
 	if err != nil {
 		return -1, false, err
@@ -21,7 +21,7 @@ func (idx *Indexer) binarySearch(k []byte) (int64, bool, error) {
 	low := int64(0)
 	high := count - 1
 	median := int64(0)
-	medianKey := make([]byte, idx.KeySize)
+	medianKey := make([]byte, idx.keySize)
 
 	for low <= high {
 		median = (low + high) / 2
@@ -43,13 +43,13 @@ func (idx *Indexer) binarySearch(k []byte) (int64, bool, error) {
 	return low, false, nil
 }
 
-func (idx *Indexer) Insert(item encoding.BinaryMarshaler) (int64, error) {
+func (idx *indexer) Insert(item Item) (int64, error) {
 	b, err := item.MarshalBinary()
 	if err != nil {
 		return -1, err
 	}
 
-	off, found, err := idx.binarySearch(b[:idx.KeySize])
+	off, found, err := idx.binarySearch(b[:idx.keySize])
 	if err != nil {
 		return -1, err
 	}
@@ -67,13 +67,13 @@ func (idx *Indexer) Insert(item encoding.BinaryMarshaler) (int64, error) {
 	return off, nil
 }
 
-func (idx *Indexer) Find(keyId encoding.BinaryMarshaler) (int64, error) {
+func (idx *indexer) Find(keyId encoding.BinaryMarshaler) (int64, error) {
 	b, err := keyId.MarshalBinary()
 	if err != nil {
 		return -1, nil
 	}
 
-	if uint16(len(b)) != idx.KeySize {
+	if uint16(len(b)) != idx.keySize {
 		return -1, errors.New("invalid key id size")
 	}
 
@@ -89,10 +89,14 @@ func (idx *Indexer) Find(keyId encoding.BinaryMarshaler) (int64, error) {
 	return off, nil
 }
 
-func NewIndexer(s *Storage, keySize uint16) (*Indexer, error) {
-	if keySize > s.ItemSize {
+func (idx *indexer) KeySize() uint16 {
+	return idx.keySize
+}
+
+func NewIndexer(s Storage, keySize uint16) (Indexer, error) {
+	if keySize > s.ItemSize() {
 		return nil, errors.New("key size exceeded the item size")
 	}
 
-	return &Indexer{s: s, KeySize: keySize}, nil
+	return &indexer{s: s, keySize: keySize}, nil
 }

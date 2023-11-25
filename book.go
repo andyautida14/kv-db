@@ -19,9 +19,9 @@ type Book struct {
 }
 
 type BookCollection struct {
-	dataStorage *Storage
-	keyStorage  *Storage
-	indexer     *Indexer
+	dataStorage Storage
+	keyStorage  Storage
+	indexer     Indexer
 }
 
 func (b *Book) MarshalBinary() ([]byte, error) {
@@ -67,7 +67,7 @@ func (c *BookCollection) Put(id encoding.BinaryMarshaler, book *Book) error {
 			return err
 		}
 	} else {
-		k := make([]byte, c.indexer.KeySize)
+		k := make([]byte, int(c.indexer.KeySize()))
 		if _, err := c.keyStorage.ReadOffset(k, keyOffset); err != nil {
 			return err
 		}
@@ -95,7 +95,7 @@ func (c *BookCollection) Get(id encoding.BinaryMarshaler) (*Book, error) {
 		return nil, errors.New("item not found")
 	}
 
-	k := make([]byte, c.keyStorage.ItemSize)
+	k := make([]byte, c.keyStorage.ItemSize())
 	if _, err := c.keyStorage.ReadOffset(k, keyOffset); err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (c *BookCollection) Get(id encoding.BinaryMarshaler) (*Book, error) {
 		return nil, err
 	}
 
-	b := make([]byte, c.dataStorage.ItemSize)
+	b := make([]byte, c.dataStorage.ItemSize())
 	if _, err := c.dataStorage.ReadOffset(b, int64(key.Offset)); err != nil {
 		return nil, err
 	}
