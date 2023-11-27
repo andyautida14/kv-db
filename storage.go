@@ -37,6 +37,34 @@ func (s *storage) WriteOffset(b []byte, off int64) (int, error) {
 	return n, nil
 }
 
+func (s *storage) ShiftLeft(targetOffset int64) error {
+	count, err := s.Count()
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		return nil
+	}
+
+	currentOffset := targetOffset
+	lastOffset := count - 1
+	b := make([]byte, s.itemSize)
+	for currentOffset < lastOffset {
+		if _, err := s.ReadOffset(b, currentOffset+1); err != nil {
+			return err
+		}
+
+		if _, err := s.WriteOffset(b, currentOffset); err != nil {
+			return err
+		}
+
+		currentOffset += 1
+	}
+
+	return s.f.Truncate((count - 1) * int64(s.itemSize))
+}
+
 func (s *storage) ShiftRight(targetOffset int64) error {
 	currentOffset, err := s.Count()
 	if err != nil {

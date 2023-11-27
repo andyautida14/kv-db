@@ -50,12 +50,16 @@ func main() {
 		fmt.Println("saved book:", keys[i], books[i])
 	}
 
+	if err := collection.Remove(&keys[2]); err != nil {
+		log.Fatal(err)
+	}
+
 	for _, key := range keys {
 		book := &Book{}
 		if err := collection.Get(&key, book); err != nil {
-			log.Fatal(err)
+			fmt.Println("error retrieving book:", key, err)
+		} else {
+			fmt.Println("retrieved book:", key, book)
 		}
-
-		fmt.Println("retrieved book:", key, book)
 	}
 }

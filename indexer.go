@@ -66,6 +66,28 @@ func (idx *indexer) Insert(item Item) (int64, error) {
 	return off, nil
 }
 
+func (idx *indexer) Remove(keyId KeyId) error {
+	b, err := keyId.MarshalBinary()
+	if err != nil {
+		return err
+	}
+
+	if uint16(len(b)) != idx.keySize {
+		return errors.New("invalid key id size")
+	}
+
+	off, found, err := idx.binarySearch(b)
+	if err != nil {
+		return err
+	}
+
+	if !found {
+		return nil
+	}
+
+	return idx.s.ShiftLeft(off)
+}
+
 func (idx *indexer) Find(keyId KeyId) (int64, error) {
 	b, err := keyId.MarshalBinary()
 	if err != nil {

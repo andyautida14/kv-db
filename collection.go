@@ -86,6 +86,10 @@ func (c *collection) Get(id KeyId, item Item) error {
 	return item.UnmarshalBinary(b)
 }
 
+func (c *collection) Remove(id KeyId) error {
+	return c.indexer.Remove(id)
+}
+
 func (c *collection) Count() (int64, error) {
 	return c.keyStorage.Count()
 }
