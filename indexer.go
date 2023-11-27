@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding"
 
 	"github.com/pkg/errors"
 )
@@ -67,7 +66,7 @@ func (idx *indexer) Insert(item Item) (int64, error) {
 	return off, nil
 }
 
-func (idx *indexer) Find(keyId encoding.BinaryMarshaler) (int64, error) {
+func (idx *indexer) Find(keyId KeyId) (int64, error) {
 	b, err := keyId.MarshalBinary()
 	if err != nil {
 		return -1, nil

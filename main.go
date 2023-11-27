@@ -43,7 +43,7 @@ func main() {
 	}
 
 	for i := 0; i < 4; i++ {
-		if err := collection.Put(keys[i], &books[i]); err != nil {
+		if err := collection.Put(&keys[i], &books[i]); err != nil {
 			log.Fatal(err)
 		}
 
@@ -51,8 +51,8 @@ func main() {
 	}
 
 	for _, key := range keys {
-		book, err := collection.Get(key)
-		if err != nil {
+		book := &Book{}
+		if err := collection.Get(&key, book); err != nil {
 			log.Fatal(err)
 		}
 
