@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestBinaryMarshallingAndUnmarshalling(t *testing.T) {
+func TestBookBinaryMarshallingAndUnmarshalling(t *testing.T) {
 	book := Book{
 		Title: "Game of Thrones",
 		Year:  1996,
@@ -29,7 +29,7 @@ func TestBinaryMarshallingAndUnmarshalling(t *testing.T) {
 	}
 }
 
-func TestUnmarshallBinaryInvalidByteSliceSize(t *testing.T) {
+func TestBookUnmarshallBinaryInvalidByteSliceSize(t *testing.T) {
 	book := Book{}
 
 	b := make([]byte, BookSize+10)
