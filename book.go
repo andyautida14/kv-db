@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 
 	"github.com/pkg/errors"
@@ -19,7 +20,7 @@ type Book struct {
 
 func (b *Book) MarshalBinary() ([]byte, error) {
 	var buf [BookSize]byte
-	copy(buf[:BookTitleSize-1], []byte(b.Title+"\000"))
+	copy(buf[:BookTitleSize], []byte(b.Title))
 	binary.LittleEndian.PutUint16(buf[BookTitleSize:], b.Year)
 	return buf[:], nil
 }
@@ -29,7 +30,8 @@ func (book *Book) UnmarshalBinary(b []byte) error {
 		return errors.New("invalid slice size")
 	}
 
-	book.Title = string(b[:BookTitleSize])
+	title_b := b[:bytes.IndexByte(b[:BookTitleSize], 0)]
+	book.Title = string(title_b)
 	book.Year = binary.LittleEndian.Uint16(b[BookTitleSize:])
 	return nil
 }
