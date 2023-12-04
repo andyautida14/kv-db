@@ -112,6 +112,10 @@ func (s *storage) ItemSize() uint16 {
 	return s.itemSize
 }
 
+func (s *storage) Close() error {
+	return s.f.Close()
+}
+
 func NewStorage(filename string, itemSize uint16) (Storage, error) {
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {

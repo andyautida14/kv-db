@@ -18,8 +18,9 @@ type Storage interface {
 	ShiftLeft(int64) error
 	ShiftRight(int64) error
 	Count() (int64, error)
-	Reset() error
 	ItemSize() uint16
+	Reset() error
+	Close() error
 }
 
 type Indexer interface {
@@ -35,4 +36,5 @@ type Collection interface {
 	Remove(KeyId) error
 	Count() (int64, error)
 	Reset() error
+	Close() error
 }

@@ -102,6 +102,18 @@ func (c *collection) Reset() error {
 	return c.dataStorage.Reset()
 }
 
+func (c *collection) Close() error {
+	err1 := c.dataStorage.Close()
+	err2 := c.keyStorage.Close()
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+	return nil
+}
+
 func NewCollection(dataPath string, keySize uint16, keyIdSize uint16, itemSize uint16) (Collection, error) {
 	collectionDir := filepath.Join(dataPath, "book")
 	if err := os.MkdirAll(collectionDir, os.ModePerm); err != nil {
