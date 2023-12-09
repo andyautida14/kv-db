@@ -7,12 +7,11 @@ import (
 )
 
 type indexer struct {
-	s       Storage
 	keySize uint16
 }
 
-func (idx *indexer) binarySearch(k []byte) (int64, bool, error) {
-	count, err := idx.s.Count()
+func (idx *indexer) binarySearch(s Storage, k []byte) (int64, bool, error) {
+	count, err := s.Count()
 	if err != nil {
 		return -1, false, err
 	}
@@ -25,7 +24,7 @@ func (idx *indexer) binarySearch(k []byte) (int64, bool, error) {
 	for low <= high {
 		median = (low + high) / 2
 
-		if _, err := idx.s.ReadOffset(medianKey, median); err != nil {
+		if _, err := s.ReadOffset(medianKey, median); err != nil {
 			return 0, false, err
 		}
 
@@ -42,31 +41,31 @@ func (idx *indexer) binarySearch(k []byte) (int64, bool, error) {
 	return low, false, nil
 }
 
-func (idx *indexer) Insert(item Item) (int64, error) {
+func (idx *indexer) Insert(s Storage, item Item) (int64, error) {
 	b, err := item.MarshalBinary()
 	if err != nil {
 		return -1, err
 	}
 
-	off, found, err := idx.binarySearch(b[:idx.keySize])
+	off, found, err := idx.binarySearch(s, b[:idx.keySize])
 	if err != nil {
 		return -1, err
 	}
 
 	if !found {
-		if err := idx.s.ShiftRight(off); err != nil {
+		if err := s.ShiftRight(off); err != nil {
 			return -1, err
 		}
 	}
 
-	if _, err := idx.s.WriteOffset(b, off); err != nil {
+	if _, err := s.WriteOffset(b, off); err != nil {
 		return -1, err
 	}
 
 	return off, nil
 }
 
-func (idx *indexer) Remove(keyId KeyId) error {
+func (idx *indexer) Remove(s Storage, keyId KeyId) error {
 	b, err := keyId.MarshalBinary()
 	if err != nil {
 		return err
@@ -76,7 +75,7 @@ func (idx *indexer) Remove(keyId KeyId) error {
 		return errors.New("invalid key id size")
 	}
 
-	off, found, err := idx.binarySearch(b)
+	off, found, err := idx.binarySearch(s, b)
 	if err != nil {
 		return err
 	}
@@ -85,10 +84,10 @@ func (idx *indexer) Remove(keyId KeyId) error {
 		return nil
 	}
 
-	return idx.s.ShiftLeft(off)
+	return s.ShiftLeft(off)
 }
 
-func (idx *indexer) Find(keyId KeyId) (int64, error) {
+func (idx *indexer) Find(s Storage, keyId KeyId) (int64, error) {
 	b, err := keyId.MarshalBinary()
 	if err != nil {
 		return -1, nil
@@ -98,7 +97,7 @@ func (idx *indexer) Find(keyId KeyId) (int64, error) {
 		return -1, errors.New("invalid key id size")
 	}
 
-	off, found, err := idx.binarySearch(b)
+	off, found, err := idx.binarySearch(s, b)
 	if err != nil {
 		return -1, err
 	}
@@ -114,10 +113,6 @@ func (idx *indexer) KeySize() uint16 {
 	return idx.keySize
 }
 
-func NewIndexer(s Storage, keySize uint16) (Indexer, error) {
-	if keySize > s.ItemSize() {
-		return nil, errors.New("key size exceeded the item size")
-	}
-
-	return &indexer{s: s, keySize: keySize}, nil
+func NewIndexer(keySize uint16) Indexer {
+	return &indexer{keySize: keySize}
 }

@@ -24,9 +24,9 @@ type Storage interface {
 }
 
 type Indexer interface {
-	Insert(Item) (int64, error)
-	Find(KeyId) (int64, error)
-	Remove(KeyId) error
+	Insert(Storage, Item) (int64, error)
+	Find(Storage, KeyId) (int64, error)
+	Remove(Storage, KeyId) error
 	KeySize() uint16
 }
 

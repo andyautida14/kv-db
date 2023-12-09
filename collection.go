@@ -15,7 +15,7 @@ type collection struct {
 }
 
 func (c *collection) Put(id KeyId, item Item) error {
-	keyOffset, err := c.indexer.Find(id)
+	keyOffset, err := c.indexer.Find(c.keyStorage, id)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (c *collection) Put(id KeyId, item Item) error {
 		}
 
 		key := &key{id: id, offset: uint64(dataOffset)}
-		if _, err := c.indexer.Insert(key); err != nil {
+		if _, err := c.indexer.Insert(c.keyStorage, key); err != nil {
 			return err
 		}
 	} else {
@@ -59,7 +59,7 @@ func (c *collection) Put(id KeyId, item Item) error {
 }
 
 func (c *collection) Get(id KeyId, item Item) error {
-	keyOffset, err := c.indexer.Find(id)
+	keyOffset, err := c.indexer.Find(c.keyStorage, id)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (c *collection) Get(id KeyId, item Item) error {
 }
 
 func (c *collection) Remove(id KeyId) error {
-	return c.indexer.Remove(id)
+	return c.indexer.Remove(c.keyStorage, id)
 }
 
 func (c *collection) Count() (int64, error) {
@@ -133,10 +133,7 @@ func NewCollection(dataPath string, keySize uint16, keyIdSize uint16, itemSize u
 		return nil, err
 	}
 
-	indexer, err := NewIndexer(keyStorage, keyIdSize)
-	if err != nil {
-		return nil, err
-	}
+	indexer := NewIndexer(keyIdSize)
 
 	return &collection{
 		dataStorage: dataStorage,
