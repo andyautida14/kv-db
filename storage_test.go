@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func setupTest(tb testing.TB) (func(tb testing.TB), Storage, []Book) {
+func setupStorageTest(tb testing.TB) (func(tb testing.TB), Storage, []Book) {
 	if err := os.MkdirAll("./data/test", os.ModePerm); err != nil {
 		tb.Fatalf("storage data directory creation failed: %v", err)
 	}
@@ -56,7 +56,7 @@ func setupTest(tb testing.TB) (func(tb testing.TB), Storage, []Book) {
 }
 
 func TestStorageReadWriteOffset(t *testing.T) {
-	teardown, s, books := setupTest(t)
+	teardown, s, books := setupStorageTest(t)
 	defer teardown(t)
 
 	for i, book := range books {
@@ -87,7 +87,7 @@ func TestStorageReadWriteOffset(t *testing.T) {
 }
 
 func TestStorageCount(t *testing.T) {
-	teardown, s, _ := setupTest(t)
+	teardown, s, _ := setupStorageTest(t)
 	defer teardown(t)
 
 	count, err := s.Count()
@@ -101,7 +101,7 @@ func TestStorageCount(t *testing.T) {
 }
 
 func TestStorageOverwrite(t *testing.T) {
-	teardown, s, books := setupTest(t)
+	teardown, s, books := setupStorageTest(t)
 	defer teardown(t)
 
 	updatedBook := &Book{
@@ -148,7 +148,7 @@ func TestStorageOverwrite(t *testing.T) {
 }
 
 func TestStorageShiftLeft(t *testing.T) {
-	teardown, s, books := setupTest(t)
+	teardown, s, books := setupStorageTest(t)
 	defer teardown(t)
 
 	if err := s.ShiftLeft(1); err != nil {
@@ -197,7 +197,7 @@ func TestStorageShiftLeft(t *testing.T) {
 }
 
 func TestStorageShiftRight(t *testing.T) {
-	teardown, s, books := setupTest(t)
+	teardown, s, books := setupStorageTest(t)
 	defer teardown(t)
 
 	if err := s.ShiftRight(1); err != nil {
@@ -248,7 +248,7 @@ func TestStorageShiftRight(t *testing.T) {
 }
 
 func TestStorageItemSize(t *testing.T) {
-	teardown, s, _ := setupTest(t)
+	teardown, s, _ := setupStorageTest(t)
 	defer teardown(t)
 
 	itemSize := s.ItemSize()
