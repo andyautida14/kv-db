@@ -40,12 +40,12 @@ func (c *collection) Put(id KeyId, item Item) error {
 			return err
 		}
 	} else {
-		k := make([]byte, int(c.indexer.KeySize()))
+		k := make([]byte, int(c.keyStorage.ItemSize()))
 		if _, err := c.keyStorage.ReadOffset(k, keyOffset); err != nil {
 			return err
 		}
 
-		key := &key{}
+		key := &key{id: id}
 		if err := key.UnmarshalBinary(k); err != nil {
 			return err
 		}

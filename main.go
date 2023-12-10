@@ -50,6 +50,12 @@ func main() {
 		fmt.Println("saved book:", keys[i], books[i])
 	}
 
+	books[1].Title = "Harry Potter and the Order of the Phoenix"
+	books[1].Year = 2003
+	if err := collection.Put(&keys[1], &books[1]); err != nil {
+		log.Fatal(err)
+	}
+
 	if err := collection.Remove(&keys[2]); err != nil {
 		log.Fatal(err)
 	}
