@@ -114,8 +114,7 @@ func (c *collection) Close() error {
 	return nil
 }
 
-func NewCollection(dataPath string, keySize uint16, keyIdSize uint16, itemSize uint16) (Collection, error) {
-	collectionDir := filepath.Join(dataPath, "book")
+func NewCollection(collectionDir string, keySize uint16, keyIdSize uint16, itemSize uint16) (Collection, error) {
 	if err := os.MkdirAll(collectionDir, os.ModePerm); err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 )
@@ -37,5 +38,6 @@ func (book *Book) UnmarshalBinary(b []byte) error {
 }
 
 func NewBookCollection(dataPath string) (Collection, error) {
-	return NewCollection(dataPath, KeySize, KeyIdSize, BookSize)
+	collectionDir := filepath.Join(dataPath, "book")
+	return NewCollection(collectionDir, KeySize, KeyIdSize, BookSize)
 }
